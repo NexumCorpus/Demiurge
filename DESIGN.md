@@ -90,7 +90,27 @@ no phenomenal claims in either direction).
 - **D3** — missions with teeth: real estate work as the fitness substrate;
   certified-claim rate becomes the reported vital sign.
 
-## Provenance
+## Amendment 1 (2026-07-02) — mission-space doctrine
+
+A domain is ADMISSIBLE as a Demiurge II mission iff:
+1. **Trusted oracle** — verification is the domain's own physics (a checker,
+   a simulator, a mathematical condition), never the proposer's judgment;
+2. **Reproducible** — seed-exact where possible, replicate-statistical where
+   not (the Boundary Program's ensemble machinery is the template);
+3. **Budgeted** — cost per verification is declared and capped in advance.
+
+Under this rule the digital discovery space is the set of questions with
+cheap trusted verifiers: mathematics and extremal objects, algorithms against
+real traces, code/configuration performance, and every physical science that
+simulates (the certified MIPT result already lives in this class). Domains
+are mined in ascending oracle-cost order.
+
+**The physical phase (later, deliberate):** oracles become instruments;
+reproduce-then-holdout becomes replicate-then-blind-replicate; noise makes
+verification statistical and cost makes proposal quality load-bearing. One
+structural addition is non-negotiable there: a HUMAN gate on irreversible
+actions — the substrate treats irreversibility the way it treats its own
+hash manifest, as a boundary the organism cannot cross alone.
 
 Substrate machinery: atlas-station (grader.cjs, CLAIMS.json, wing protocol),
 station (spine, cursors, suites). Science: E:\boundary
