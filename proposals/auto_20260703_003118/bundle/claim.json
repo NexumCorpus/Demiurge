@@ -1,0 +1,14 @@
+{
+ "id": "demiurge-organ-auto-20260703_003118-1opt-2opt-adj-ils",
+ "statement": "Multi-start (1-opt + 2-opt-adjacent) local search with ILS perturbation beats the 600-restart 1-opt champion by finding strictly better local optima on seeds where adjacent nodes are in a frustrated state.",
+ "check": [
+  "python",
+  "check.py",
+  "{seed}"
+ ],
+ "claimed_seeds": [
+  13,
+  42,
+  57
+ ]
+}
