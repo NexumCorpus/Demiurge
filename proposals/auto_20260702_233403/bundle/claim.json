@@ -1,0 +1,14 @@
+{
+ "id": "demiurge-organ-auto-20260702_233403-multistart-local-search",
+ "statement": "Multi-start 1-flip local search (600 random restarts plus greedy seed) outscores the single-pass greedy champion by 280-600 points across all tested seeds.",
+ "check": [
+  "python",
+  "check.py",
+  "{seed}"
+ ],
+ "claimed_seeds": [
+  1,
+  42,
+  1234
+ ]
+}
