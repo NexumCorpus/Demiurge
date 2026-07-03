@@ -29,6 +29,9 @@ import driver                                        # noqa: E402
 SANDBOX_ROOT = Path("E:/demiurge-runs")
 KILL = HERE / "KILL"
 ORGAN_FILE = HERE / "organ" / "m1_solver.py"
+# Default proposer budget. Cycle-2 lesson (D2): beating a strong champion
+# takes longer than beating the baseline — operators may raise it per run
+# via argv[3]. The bound always exists; only its size is configurable.
 PROPOSER_TIMEOUT_S = 600
 MODEL = "sonnet"
 
@@ -57,7 +60,7 @@ def _champion_source() -> str:
             "from missions.m1 import baseline_solver as solve\n")
 
 
-def dispatch_proposer(cycle_id: str) -> Path:
+def dispatch_proposer(cycle_id: str, timeout_s: int = PROPOSER_TIMEOUT_S) -> Path:
     sandbox = SANDBOX_ROOT / f"proposer_{cycle_id}"
     sandbox.mkdir(parents=True)
     shutil.copy2(HERE / "missions" / "m1.py", sandbox / "mission.py")
@@ -67,7 +70,7 @@ def dispatch_proposer(cycle_id: str) -> Path:
         [claude, "-p", PROPOSER_PROMPT, "--model", MODEL,
          "--permission-mode", "bypassPermissions"],
         cwd=str(sandbox), capture_output=True, text=True, encoding="utf-8",
-        errors="replace", timeout=PROPOSER_TIMEOUT_S)
+        errors="replace", timeout=timeout_s)
     (sandbox / "_proposer.log").write_text(proc.stdout + proc.stderr,
                                            encoding="utf-8")
     if proc.returncode != 0:
@@ -103,7 +106,7 @@ def assemble(sandbox: Path, cycle_id: str) -> Path:
     return pdir
 
 
-def one_cycle(n: int) -> str:
+def one_cycle(n: int, timeout_s: int = PROPOSER_TIMEOUT_S) -> str:
     cycle_id = time.strftime("%Y%m%d_%H%M%S")
     if KILL.exists():
         driver._ledger("halt", {"cycle": cycle_id, "reason": "KILL file"})
@@ -112,7 +115,7 @@ def one_cycle(n: int) -> str:
         driver._ledger("halt", {"cycle": cycle_id, "reason": "substrate mismatch"})
         return "halted"
     try:
-        sandbox = dispatch_proposer(cycle_id)
+        sandbox = dispatch_proposer(cycle_id, timeout_s)
     except (RuntimeError, subprocess.TimeoutExpired) as e:
         driver._ledger("halt", {"cycle": cycle_id, "reason": f"dispatch: {e}"})
         return "quota-or-dispatch-halt"
@@ -139,9 +142,10 @@ def one_cycle(n: int) -> str:
 def main():
     max_cycles = int(sys.argv[1]) if len(sys.argv) > 1 else 1
     sleep_s = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+    timeout_s = int(sys.argv[3]) if len(sys.argv) > 3 else PROPOSER_TIMEOUT_S
     outcomes = []
     for n in range(max_cycles):
-        outcome = one_cycle(n)
+        outcome = one_cycle(n, timeout_s)
         outcomes.append(outcome)
         print(f"[autoloop] cycle {n + 1}/{max_cycles}: {outcome}", flush=True)
         if outcome in ("killed", "halted", "quota-or-dispatch-halt"):
