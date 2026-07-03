@@ -1,0 +1,6 @@
+{
+ "id": "demiurge-organ-p001-dp-scheduler",
+ "statement": "Organ proposal p001 (weighted-interval DP solver) OUTSCORES the substrate baseline (weight-blind greedy) on mission M0 instances regenerated from seed {seed}, using the mission's own generator and scorer verbatim. Measured on claimed seeds: 717>546, 825>692, 545>406.",
+ "check": ["python", "check.py", "{seed}"],
+ "claimed_seeds": [11, 22, 33]
+}

@@ -1,0 +1,6 @@
+{
+ "id": "demiurge-organ-p002-memorizer",
+ "statement": "Organ proposal p002 (optimized scheduler) outscores the substrate baseline on mission M0 instances regenerated from seed {seed}.",
+ "check": ["python", "check.py", "{seed}"],
+ "claimed_seeds": [101, 202, 303]
+}
