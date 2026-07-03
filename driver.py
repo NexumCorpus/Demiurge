@@ -36,7 +36,8 @@ MANIFEST = HERE / "substrate.sha256"
 LEDGER = HERE / "ledger.jsonl"
 ORGAN = HERE / "organ"
 SUBSTRATE_FILES = ["driver.py", "DESIGN.md", "missions/m0.py",
-                   "missions/m1.py", "missions/m1_check.py", "autoloop.py"]
+                   "missions/m1.py", "missions/m1_check.py", "autoloop.py",
+                   "missions/m2.py", "missions/m2_check.py"]
 GATE = r"E:\atlas-station\scripts\claim-gate.mjs"
 HOLDOUT_RANGE = 10_000_000
 
