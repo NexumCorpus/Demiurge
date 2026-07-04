@@ -65,8 +65,11 @@ words over symbols 0..{q_1}) is valid iff EVERY word in Z_{q}^{n} is within
 Hamming distance {R} of some codeword. Goal: a VALID code with FEWER than
 {champ} codewords (current best here). The all-time record is {record}.
 
-mission.py in this directory has is_covering(code,q,n,R) and score(cell,code)
-- USE THEM to self-check. Write construct.py that:
+REPRESENTATION CONTRACT (violations crash and waste the cycle): a codeword
+is a list of {n} ints, each 0..{q_1}; the code is a list of such lists.
+Never invent another representation. mission.py in this directory has
+is_covering(code,q,n,R) and score(cell,code) - USE THEM to self-check,
+never roll your own coverage/distance check. Write construct.py that:
   1. builds a covering code by any method (algebraic construction, greedy +
      local search / simulated annealing removing redundant codewords from a
      valid start, LP/ILP-free heuristics — your choice; deterministic, seed
@@ -74,8 +77,14 @@ mission.py in this directory has is_covering(code,q,n,R) and score(cell,code)
   2. imports mission, ASSERTS is_covering(code,{q},{n},{R}) is True and
      len(code) < {champ} before emitting — if you cannot beat {champ}, still
      emit your smallest VALID code (a valid code is worth confirming);
-  3. prints ONLY the JSON list of codewords (each a list of {n} ints) to
-     stdout as the last line.
+  3. prints ONLY the JSON list of codewords to stdout as the last line.
+Skeleton (fill in build(); keep the rest verbatim):
+    import json, mission
+    def build():
+        ...  # return list of codewords (each a list of {n} ints 0..{q_1})
+    code = build()
+    assert mission.is_covering(code, {q}, {n}, {R})
+    print(json.dumps(code))
 Claim only a valid, verified code. A code that does not cover, or is not
 smaller, will be rejected by an external gate on unseen audit seeds."""
 
