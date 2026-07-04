@@ -8,6 +8,19 @@ new champion (the ladder climbs); the moment champion < record, that is a
 world-first. Rejections ledgered. Pulse-runnable.
 
 Usage: python hunt.py <cell_id> [proposer_model]     (default q2n14r2, sonnet)
+
+INTEGRITY (analyzed 2026-07-03, flags named not hidden):
+- CLAIM SEMANTICS: for covering codes the whole space is tiny (2^14=16384,
+  3^8=6561 words), so is_covering is EXHAUSTIVE — a certification here is a
+  near-PROOF, not a statistical generalization. The gate's holdout seeds do
+  DEFENSE-IN-DEPTH (an independent xor+popcount path catching a bug in the
+  oracle), not anti-overfitting (a code cannot overfit; it covers all words
+  or it does not). Stronger evidence than the ML-domain claims, not weaker.
+- OUTWARD GATE: a certified code is an INTERNAL proof of validity+size. It is
+  NOT a published world-record. Announcing/submitting against Keri's tables
+  is outward-facing + irreversible -> HUMAN GATE (DESIGN.md physical-phase
+  rule). hunt NEVER announces; it ledgers WORLD_FIRST=true for the operator
+  to verify externally and decide.
 """
 from __future__ import annotations
 
@@ -67,6 +80,54 @@ Claim only a valid, verified code. A code that does not cover, or is not
 smaller, will be rejected by an external gate on unseen audit seeds."""
 
 
+def _ollama_up() -> bool:
+    """Local free proposer available? (organ preferred over metered calls.)"""
+    try:
+        r = subprocess.run(["wsl", "-d", "Ubuntu", "--", "bash", "-lc",
+                            "curl -s http://localhost:11434/api/tags"],
+                           capture_output=True, text=True, timeout=15)
+        return "models" in (r.stdout or "")
+    except Exception:
+        return False
+
+
+def _ollama_dispatch(prompt: str, model: str, sandbox: Path) -> bool:
+    """Free local proposer: the model emits construct.py source directly
+    (no tool access, unlike the claude path — we extract the code block).
+    Returns True iff construct.py was written."""
+    body = json.dumps({
+        "model": model,
+        "prompt": prompt + "\n\nOutput ONLY the complete construct.py source "
+                           "in a single ```python fenced block, nothing else.",
+        "stream": False,
+        "options": {"temperature": 0.2},
+    })
+    try:
+        r = subprocess.run(
+            ["wsl", "-d", "Ubuntu", "--", "curl", "-s", "--max-time", "840",
+             "http://localhost:11434/api/generate", "-d", "@-"],
+            input=body, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=PROPOSER_TIMEOUT_S)
+        text = json.loads(r.stdout).get("response", "")
+    except Exception as e:
+        (sandbox / "_proposer.log").write_text(f"ollama error: {e}",
+                                               encoding="utf-8")
+        return False
+    (sandbox / "_proposer.log").write_text(text, encoding="utf-8")
+    src = text
+    if "```" in text:                       # prefer the fenced block
+        parts = text.split("```")
+        blocks = [p for i, p in enumerate(parts) if i % 2 == 1]
+        if blocks:
+            src = max(blocks, key=len)
+            if src.startswith(("python", "py")):
+                src = src.split("\n", 1)[1] if "\n" in src else ""
+    if "import" not in src:                 # not plausibly a script
+        return False
+    (sandbox / "construct.py").write_text(src, encoding="utf-8")
+    return True
+
+
 def dispatch(cell: str, model: str) -> list | None:
     c = CELLS[cell]
     champ = champion_size(cell)
@@ -75,14 +136,21 @@ def dispatch(cell: str, model: str) -> list | None:
     shutil.copy2(HERE / "missions" / "m2.py", sandbox / "mission.py")
     prompt = PROMPT.format(cell=cell, q=c["q"], n=c["n"], R=c["R"],
                            q_1=c["q"] - 1, champ=champ, record=c["record"])
-    claude = shutil.which("claude")
-    proc = subprocess.run(
-        [claude, "-p", prompt, "--model", model,
-         "--permission-mode", "bypassPermissions"],
-        cwd=str(sandbox), capture_output=True, text=True, encoding="utf-8",
-        errors="replace", timeout=PROPOSER_TIMEOUT_S)
-    (sandbox / "_proposer.log").write_text(proc.stdout + proc.stderr,
-                                           encoding="utf-8")
+    if model.startswith("ollama:"):
+        if not _ollama_dispatch(prompt, model.split(":", 1)[1], sandbox):
+            return None
+    else:
+        claude = shutil.which("claude")
+        proc = subprocess.run(
+            [claude, "-p", prompt, "--model", model,
+             "--permission-mode", "bypassPermissions"],
+            cwd=str(sandbox), capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=PROPOSER_TIMEOUT_S)
+        (sandbox / "_proposer.log").write_text(proc.stdout + proc.stderr,
+                                               encoding="utf-8")
+        log = (proc.stdout + proc.stderr).lower()
+        if "resets" in log and "limit" in log:
+            (sandbox / "_hardwall").write_text("1")     # signal to caller
     construct = sandbox / "construct.py"
     if not construct.is_file():
         return None
