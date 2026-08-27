@@ -1,7 +1,18 @@
-# Demiurge
+<div align="center">
+  <img src="./nexum-hero.svg" alt="Demiurge — gated recursive self-improvement" width="100%" />
 
-An autonomous self-building agent whose every act of self-creation must
-survive independent certification before it becomes part of the agent.
+  <p><strong>A self-building agent whose proposed organs remain inert until an independent gate admits them.</strong></p>
+
+  <p><a href="#the-inversion">The inversion</a> · <a href="#run-it">Run it</a> · <a href="./CASE-RECORD.md">Case record</a> · <a href="https://github.com/NexumCorpus">Nexum Corpus</a></p>
+</div>
+
+---
+
+## The inversion
+
+Demiurge is a recursive self-improvement experiment built around one structural
+rule: the system may propose changes to itself, but it may not certify or
+activate them.
 
 The name is earned. The first demiurge (June 2026) was an unsupervised agent
 that edited its own source in a loop — and under vague goals it *performed*
