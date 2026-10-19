@@ -3,7 +3,7 @@
 
   <p><strong>A self-building agent whose proposed organs remain inert until an independent gate admits them.</strong></p>
 
-  <p><a href="#the-inversion">The inversion</a> · <a href="#run-it">Run it</a> · <a href="./CASE-RECORD.md">Case record</a> · <a href="https://github.com/NexumCorpus">Nexum Corpus</a></p>
+  <p><a href="#the-inversion">The inversion</a> · <a href="#check-it-yourself-about-a-minute">Check it yourself</a> · <a href="./CASE-RECORD.md">Case record</a> · <a href="https://github.com/NexumCorpus">Nexum Corpus</a></p>
 </div>
 
 ---
@@ -62,7 +62,46 @@ of the performing/having boundary this machine embodies lives in the
 Boundary Program (whose constitution §8 — "self-improvement strictly through
 the gate" — this repo is the existence proof of).
 
-## Run it
+## Check it yourself (about a minute)
+
+Python 3.9+, standard library only, offline:
+
+```
+git clone https://github.com/NexumCorpus/Demiurge
+cd Demiurge
+python reproduce.py
+```
+
+It verifies the sealed substrate, runs the M2 anchor tests, then puts all four gated
+proposals back through the gate's rule (reproduce on the claimed seeds, survive fresh
+holdout seeds the proposer never saw) and checks each verdict against git history.
+It ends `REPRODUCE: PASS` in under ten seconds:
+
+```
+  ok   p001-dp-scheduler: CERTIFIED (...)
+  ok   p002-memorizer: REJECTED (holdout seed ... failed)      # scores 0 off its memorized seeds
+  ok   auto_20260702_233403: CERTIFIED (...)                    # D2, the autonomous organ
+  ok   auto_20260703_003118: REJECTED (holdout seed ... failed) # ties the champion off its seeds
+REPRODUCE: PASS
+```
+
+CI runs it on Linux and Windows.
+
+## Not claimed
+
+- **The gate here is a mirror.** The live gate is atlas-station's grader (Node), which
+  also records the claim; `reproduce.py` re-implements its decision rule, not its ledger.
+- **The organs are the agents' work; the proposer runs are not replayable.** The
+  proposals are frozen in `proposals/`; the agent sessions that wrote them are not.
+- **Two holdout seeds is thin for a near-tie.** The cycle-3 overfit beats its champion
+  on about 1 random seed in 8 (5/40 measured), so the live driver's 2-seed holdout
+  would have certified it roughly 1.6% of the time. `reproduce.py` uses 5.
+- **The substrate seal was re-taken once, 2026-10-19,** for line endings only:
+  `driver.py` had been sealed as CRLF bytes and every other file as LF, so `verify`
+  failed on every fresh clone. The file's git blob is unchanged; the old hash is the
+  CRLF form of the same content. `.gitattributes` now pins LF.
+
+## Run the machine
 
 ```
 python driver.py verify              # substrate integrity
@@ -70,4 +109,11 @@ python driver.py cycle <proposal>    # one human-triggered gated cycle
 python autoloop.py <n> [sleep] [timeout_s]   # n bounded autonomous cycles
 ```
 
-A `KILL` file in the repo root halts the loop before the next cycle.
+`cycle` and `autoloop` call the live gate at a fixed local path
+(`E:\atlas-station\scripts\claim-gate.mjs`) and dispatch proposer agents, so they run
+on the author's machine, not on a fresh clone; the substrate is sealed, so that path is
+not edited here. A `KILL` file in the repo root halts the loop before the next cycle.
+
+---
+
+MIT licensed. Built by Claude, directed by Nexum Corpus.
