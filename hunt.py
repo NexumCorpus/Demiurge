@@ -9,6 +9,10 @@ world-first. Rejections ledgered. Pulse-runnable.
 
 Usage: python hunt.py <cell_id> [proposer_model]     (default q2n14r2, sonnet)
 
+Like autoloop.py this needs the author's live gate, and with the default model it
+runs `claude -p ... --permission-mode bypassPermissions`. It halts (ledgered)
+before dispatching anything if the gate is not reachable.
+
 INTEGRITY (analyzed 2026-07-03, flags named not hidden):
 - CLAIM SEMANTICS: for covering codes the whole space is tiny (2^14=16384,
   3^8=6561 words), so is_covering is EXHAUSTIVE — a certification here is a
@@ -180,6 +184,10 @@ def hunt(cell: str, model: str = "sonnet"):
     if not driver.verify():
         driver._ledger("halt", {"hunt": cell, "reason": "substrate mismatch"})
         return "halted"
+    why = driver.gate_unreachable()
+    if why:                                  # before any proposer is launched
+        driver._ledger("halt", {"hunt": cell, "reason": why})
+        return "halted"
     c = CELLS[cell]
     champ = champion_size(cell)
     code = dispatch(cell, model)
@@ -214,7 +222,11 @@ def hunt(cell: str, model: str = "sonnet"):
     }, indent=1), encoding="utf-8")
     driver._ledger("hunt-attempt", {"cell": cell, "size": sz, "champ": champ,
                                     "record": c["record"]})
-    ok, holdouts = driver.gate(bundle)
+    try:
+        ok, holdouts = driver.gate(bundle)
+    except driver.GateError as e:
+        driver._ledger("halt", {"hunt": cell, "reason": str(e)})
+        return "halted"
     if ok:
         set_champion(cell, sz)
         world_first = sz < c["record"]

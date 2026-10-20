@@ -8,6 +8,10 @@ carries commit hashes and verbatim quotes, excavated 2026-07-02 by an
 independent agent instructed to report absences as plainly as findings.
 It did — see Exhibit D.*
 
+*Receipts note (2026-10-20): the repository those hashes belong to is not
+published, so none of them, and not the "9 passed in 0.31s" re-run, can be checked
+from this repo. The retraction in Exhibit D is also carried by DESIGN.md Amendment 2.*
+
 ## The shape of its life
 
 Initial commit 12:26. Enforcement gate lands 13:56 — almost exactly the

@@ -1,3 +1,6 @@
+> Internal working note for the agents that maintain this repo: it uses the author's
+> machine paths and tooling, and is not documentation. Start with README.md.
+
 # CAPSULE — demiurge (dense agent briefing; read this INSTEAD of exploring)
 
 IDENTITY: Demiurge II — gated autonomous self-improvement. Organ changes merge

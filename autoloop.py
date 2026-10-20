@@ -11,6 +11,11 @@ certified; ledger everything.
 Bounds: max_cycles argument, KILL file (E:\\demiurge\\KILL) checked before
 every cycle, dispatch failure (quota) halts the loop, per-proposer timeout.
 
+Needs the live gate AND the Claude Code CLI: each cycle runs `claude -p ...
+--permission-mode bypassPermissions` in a sandbox directory. The loop checks the
+gate first and halts (ledgered) before dispatching anything if it is missing, so a
+clone without the author's gate never launches an agent.
+
 Usage: python autoloop.py <max_cycles> [sleep_seconds]
 """
 from __future__ import annotations
@@ -114,6 +119,10 @@ def one_cycle(n: int, timeout_s: int = PROPOSER_TIMEOUT_S) -> str:
     if not driver.verify():
         driver._ledger("halt", {"cycle": cycle_id, "reason": "substrate mismatch"})
         return "halted"
+    why = driver.gate_unreachable()
+    if why:                                  # before any agent is launched
+        driver._ledger("halt", {"cycle": cycle_id, "reason": why})
+        return "halted"
     try:
         sandbox = dispatch_proposer(cycle_id, timeout_s)
     except (RuntimeError, subprocess.TimeoutExpired) as e:
@@ -128,7 +137,12 @@ def one_cycle(n: int, timeout_s: int = PROPOSER_TIMEOUT_S) -> str:
     claim = json.loads((bundle / "claim.json").read_text(encoding="utf-8"))
     driver._ledger("attempt", {"cycle": cycle_id, "id": claim["id"],
                                "statement": claim["statement"]})
-    ok, holdouts = driver.gate(bundle)
+    try:
+        ok, holdouts = driver.gate(bundle)
+    except driver.GateError as e:
+        driver._ledger("halt", {"cycle": cycle_id, "id": claim["id"],
+                                "reason": str(e)})
+        return "halted"
     if ok:
         driver.adopt(pdir, organ_files, claim["id"])
         driver._ledger("certified", {"cycle": cycle_id, "id": claim["id"],

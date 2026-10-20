@@ -19,6 +19,11 @@ Usage:
   python driver.py seal                     # operator: (re)write the manifest
   python driver.py verify                   # substrate integrity check
   python driver.py cycle <proposal_dir>     # one full gated cycle
+
+`cycle` needs the live gate (node + GATE below). Without it the driver halts
+BEFORE the attempt, ledgers a `halt` with the reason, and exits 4 - it never
+records a rejection for a gate that did not run. Exit codes: 0 ok, 2 refused or
+rejected, 3 substrate mismatch, 4 gate unreachable or failed.
 """
 from __future__ import annotations
 
@@ -40,6 +45,24 @@ SUBSTRATE_FILES = ["driver.py", "DESIGN.md", "missions/m0.py",
                    "missions/m2.py", "missions/m2_check.py"]
 GATE = r"E:\atlas-station\scripts\claim-gate.mjs"
 HOLDOUT_RANGE = 10_000_000
+
+
+class GateError(RuntimeError):
+    """The gate did not reach a verdict (crash, bad usage). Not a rejection."""
+
+
+def gate_unreachable() -> str | None:
+    """Reason the live gate cannot run on this machine, or None if it can.
+
+    Callers check this BEFORE dispatching a proposer or ledgering an attempt, so a
+    machine without the gate (any fresh clone) halts instead of recording a
+    rejection for a gate that never ran, or spending a proposer run on nothing.
+    """
+    if shutil.which("node") is None:
+        return "gate unreachable: node is not on PATH"
+    if not Path(GATE).is_file():
+        return f"gate unreachable: {GATE} does not exist on this machine"
+    return None
 
 
 def _sha(p: Path) -> str:
@@ -110,6 +133,9 @@ def gate(bundle: Path, n_holdout: int = 2) -> tuple[bool, list[int]]:
         capture_output=True, text=True, encoding="utf-8", errors="replace",
         timeout=1800)
     print(proc.stdout.strip())
+    if proc.returncode not in (0, 2):               # 2 = a real rejection
+        raise GateError(f"gate exited {proc.returncode}: "
+                        f"{(proc.stderr or '').strip()[-300:]}")
     return proc.returncode == 0, holdouts
 
 
@@ -137,9 +163,18 @@ def cycle(pdir: Path):
         _ledger("refused", {"proposal": pdir.name, "reason": str(e)})
         sys.exit(2)
     claim = json.loads((bundle / "claim.json").read_text(encoding="utf-8"))
+    why = gate_unreachable()
+    if why:
+        _ledger("halt", {"proposal": pdir.name, "reason": why})
+        sys.exit(4)
     _ledger("attempt", {"proposal": pdir.name, "id": claim.get("id"),
                         "organ_files": [str(f) for f in organ_files]})
-    ok, holdouts = gate(bundle)
+    try:
+        ok, holdouts = gate(bundle)
+    except GateError as e:
+        _ledger("halt", {"proposal": pdir.name, "id": claim.get("id"),
+                         "reason": str(e)})
+        sys.exit(4)
     if not ok:
         _ledger("rejected", {"proposal": pdir.name, "id": claim.get("id"),
                              "holdouts": holdouts})
