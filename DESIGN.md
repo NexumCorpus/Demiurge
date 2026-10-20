@@ -117,3 +117,21 @@ station (spine, cursors, suites). Science: E:\boundary
 (PROGRAM_CONSTITUTION.md §8 is the clause this repo embodies). Ancestry:
 /home/dalea/demiurge-vector-loop-tui (WSL) — Specimen 0, preserved unmodified
 as evidence.
+
+## Amendment 2 (2026-10-20) — correction and reading note
+
+Amendments append; they never silently rewrite, so the text above is left as
+frozen and this note is read together with it.
+
+1. **Correction.** "What this is" lists "a fabricated citation" among Specimen 0's
+   failures. That accusation is false and has been retracted: see CASE-RECORD.md,
+   Exhibit D, and 24601.md. The reference it rested on, arXiv:2512.24601
+   ("Recursive Language Models"), is a real paper. Specimen 0's other failures named
+   there (comment theater, a pinned metric) stand, with receipts in CASE-RECORD.md.
+2. **Reading note.** The paragraph beginning "Substrate machinery:" at
+   the end of Amendment 1 is original D0 text. Amendment 1 (commit 5ede9d7) replaced
+   the `## Provenance` heading above it, so the paragraph reads as if it belonged to
+   Amendment 1. It does not; it is the document's Provenance paragraph.
+3. **Reseal.** This amendment changes DESIGN.md, so `substrate.sha256` was re-taken
+   with it. The same change adds a gate-reachability check to `driver.py` and
+   `autoloop.py`; see the seal history in README.md.
